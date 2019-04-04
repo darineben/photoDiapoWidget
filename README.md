@@ -1,1 +1,1 @@
-# photoDiapoWidget
+# widget
