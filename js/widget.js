@@ -56,13 +56,13 @@ class DiapoPhotoView extends WidgetView {
 		this.width = this.mvc.main.sizeX * 150;
 		this.height = this.mvc.main.sizeY * 150;
 		this.canvas = HH.create("canvas");
+		this.hidden  = HH.create("canvas");
 		HH.attr(this.canvas, {"width" : this.width, "height" : this.height});
+		HH.attr(this.hidden, {"width" : this.width, "height" : this.height});
 		
 		this.stage.appendChild(this.canvas);
 		this.context = this.canvas.getContext("2d");
-		this.context.rect(50, 50, 100, 100);
-		this.context.stroke();
-		
+		this.buffer = this.hidden.getContext("2d");
 		this.image = await (new Promise(async resolve => {
 				let x = await this.afterXms(this.mvc.controller.loadImage());
 				resolve(x);
@@ -79,17 +79,39 @@ class DiapoPhotoView extends WidgetView {
 		console.log(x);
 	}
 	async update(){
-		let i = 0;
+		let i = 0, j = 0;
 		while(i< Infinity){
-			let img = await this.afterXms(this.image[i % this.image.length], 1000);
-			let f = (img.width > img.height) ? img.width/this.width : img.height/ this.height;
-			let newWidth = img.width/f;
-			let newHeight = img.height/f;
-			this.context.clearRect(0,0,this.width, this.height);
-			this.context.drawImage(img,this.width/2 - newWidth/2,this.height/2 - newHeight/2, newWidth, newHeight);
-			i++;
-		}
-		
+			let img = await this.afterXms(this.image[i % this.image.length], 0);
+			let newWidth;
+			let newHeight;
+			if(img.width < this.width || img.height < this.height){
+				let f = await (img.width < img.height) ? this.width/img.width : this.height/img.height;
+				newWidth = img.width*f;
+				newHeight = img.height*f;
+			}else {
+				let f = await (img.width > img.height) ? img.width/this.width : img.height/this.height;
+				newWidth = img.width/f;
+				newHeight = img.height/f;
+			}
+			let 	rect = {x: this.width/2 - newWidth/2, y: this.height/2 - newHeight/2, w: newWidth, y: newHeight};
+			this.buffer.drawImage(img,this.width/2 - newWidth/2,this.height/2 - newHeight/2, newWidth, newHeight);
+			await this.fadeIn(img, rect, j);
+			j += 1;
+			if(j >= 256){
+				let test = await this.afterXms(0, 5000);
+				i++;
+				j = 0;
+			}
+		}		
+	}
+	
+	async fadeIn(img, rect, frame){
+			this.buffer.drawImage(img,rect.x,rect.y, rect.w, rect.h);
+			let pixels = this.buffer.getImageData(0,0,this.width, this.height);
+			for (let x = 3 ;x < this.width*this.height *4; x+=4){
+				pixels.data[x] = Math.floor(frame);
+			}
+		   this.context.putImageData(pixels, 0,0);
 	}
 	
 	afterXms(x, y = 50) {
