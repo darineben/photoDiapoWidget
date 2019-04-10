@@ -176,7 +176,8 @@ class DiapoPhotoController extends WidgetController {
 		let allImg = [];
 		for(let i = 0; i < this.mvc.model.fileList.length; i++){
 			let src = this.mvc.model.imgFolder + this.mvc.model.fileList[i];
-			 this.mvc.model.loadImage(src).then(img => allImg.push(img));
+			 let img = await this.mvc.model.loadImage(src);
+			allImg.push(img);
 		}
 		return allImg;
 	}
