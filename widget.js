@@ -145,7 +145,7 @@ class DiapoPhotoView extends WidgetView {
 		}
 	}
 	
-	getRect(img, x, y){ // renoie un object rect fait à partir d'une image
+	getRect(img, x, y){ // renvoie un object rect fait à partir d'une image
 		let dim = this.getDimension(img);
 		let rect = {x: x, y: y, w: dim[0], y: dim[1]};
 		return rect;
